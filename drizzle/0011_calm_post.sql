@@ -1,0 +1,1 @@
+ALTER TABLE "evaluations" ADD COLUMN "js_heavy" boolean DEFAULT false NOT NULL;

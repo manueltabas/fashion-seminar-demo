@@ -1,0 +1,1004 @@
+[
+  {
+    "id": "seminar-isolated-baseline",
+    "area": "operations",
+    "title": "Verify the isolated demo runtime",
+    "user_visible_behavior": "The copied app starts on port 3001 against its own database without modifying the original.",
+    "depends_on": [],
+    "status": "passing",
+    "verification": [
+      "Provision fashion_seminar_demo and local configuration; confirm the effective database is separate.",
+      "Run ./init.sh and npm run build; record actual results in this copy.",
+      "GET /api/health succeeds; the authenticated home page renders on port 3001."
+    ],
+    "evidence": [
+      "2026-09-22: ./init.sh passes, 102/102 tests, lint/typecheck; npm run build passes; GET /api/health 200; authenticated home 200 on port 3001; dedicated fashion_seminar_demo database.",
+      "2026-09-28: Git initialized for GitHub sync; local environment, dependencies and build outputs confirmed ignored; README and setup guide added. No runtime behavior changed or runtime verification repeated."
+    ],
+    "notes": "No new framework bootstrap. Do not mark inherited tests as fresh evidence. Provider credentials may be configured locally without printing them."
+  },
+  {
+    "id": "seminar-shopper-request",
+    "area": "evaluation",
+    "title": "Capture a fashion shopper request",
+    "user_visible_behavior": "A presenter enters a shopper request with a fashion PDP URL; the request is retained and shown on that evaluation. Three fashion example requests can populate the editable field.",
+    "depends_on": [
+      "seminar-isolated-baseline"
+    ],
+    "status": "passing",
+    "verification": [
+      "Each of three fashion example buttons populates the editable request without submitting.",
+      "Submit a request with a PDP URL; reload its report and confirm the exact request persists.",
+      "Existing evaluations without a request still render; empty optional requests preserve the existing workflow.",
+      "Run ./init.sh and npm run build; record actual results in this copy."
+    ],
+    "evidence": [
+      "2026-09-22: lint/typecheck, 104/104 tests, production build pass. Local API proves request persistence and no-request compatibility; wrong type/overlong requests return 400. Chrome login and Rain jacket example fill pass."
+    ],
+    "notes": "Update domain and API documentation before implementation. Scope is request input, validation, persistence, and display; do not change readiness scores."
+  },
+  {
+    "id": "seminar-request-assessment",
+    "area": "evaluation",
+    "title": "Assess product fit for the shopper",
+    "user_visible_behavior": "Each selected model produces a request-specific interpretation, supporting evidence, and unknowns from the captured content.",
+    "depends_on": [
+      "seminar-shopper-request"
+    ],
+    "status": "passing",
+    "verification": [
+      "A fixture with a stated material and no rain-resistance claim supports the material match but treats rain suitability as unknown.",
+      "Validate structured output and persist it; existing model output without this optional assessment remains supported.",
+      "Run ./init.sh and npm run build; record actual results in this copy."
+    ],
+    "evidence": [
+      "2026-09-22: lint/typecheck, 112 tests and production build pass. Live Rothys run completed; quoted washable evidence verified; unsupported SEK/USD budget comparison rejected and repaired into an unknown. Assessment and capture ID persisted.",
+      "Final regression suite: 121/121 tests. Capture-preserving retry verified with stubbed provider via scripts/smoke-seminar.ts."
+    ],
+    "notes": "Update model prompt and output contract first. Treat webpage text as data. Keep this assessment unscored and separate from the existing rubric. Unknown or uncaptured information must not become invented product facts."
+  },
+  {
+    "id": "seminar-demo-summary",
+    "area": "ui",
+    "title": "Present the seminar explanation",
+    "user_visible_behavior": "The report leads with the shopper request and per-model sections for What the model understood, Supporting evidence, and What remains unknown. A compact product card shows timestamped captured price and availability.",
+    "depends_on": [
+      "seminar-request-assessment"
+    ],
+    "status": "passing",
+    "verification": [
+      "Product card uses this evaluation’s capture, handles absent images/price/stock, and opens the real PDP.",
+      "Render a request assessment and confirm all three sections, short evidence quotes, model attribution, and a clear captured-content simulation label.",
+      "An older report without an assessment renders its existing content without empty or misleading seminar sections.",
+      "Run ./init.sh and npm run build; record actual results in this copy."
+    ],
+    "evidence": [
+      "2026-09-22: ./init.sh and npm run build pass; 121/121 tests; lint and typecheck pass.",
+      "Chrome desktop 1440px and mobile 390px: example selection, URL submission, automatic processing, report, product imagery, and unknowns verified with no browser errors or horizontal overflow.",
+      "Live Rothys product group resolved using captured regional redirect URL; card shows SEK 769.00 and product-data stock with explicit conflicting-page-text note.",
+      "Saved live examples: /evaluations/82ef0826-42d9-4655-a62c-bbdc17fd2dea (USD budget unknown); /evaluations/89f69827-1338-43bc-8546-20dbb915e2d0 (SEK budget).",
+      "Legacy no-request report renders without seminar sections. node --import tsx scripts/smoke-seminar.ts passes: retry uses original capture despite newer normalization and persists the assessment."
+    ],
+    "notes": "Prioritize readable presentation on a projected screen. Preserve the detailed readiness report below. Link to the actual PDP; do not require embedding sites that block framing."
+  },
+  {
+    "id": "bootstrap-app-shell",
+    "area": "bootstrap",
+    "title": "Bootstrappable Next.js app shell",
+    "user_visible_behavior": "Running ./init.sh installs dependencies, runs checks, and starts a Next.js app whose home route returns a page.",
+    "depends_on": [],
+    "status": "passing",
+    "verification": [
+      "Update init.sh to the bootstrapped variant and run it",
+      "Home route renders without error",
+      "npm run lint and npm run typecheck pass"
+    ],
+    "evidence": [
+      "./init.sh exits 0 (npm install + eslint + tsc --noEmit)",
+      "npm run build compiled successfully with Next.js 16.3.5 (Turbopack)",
+      "GET / on next start returned HTTP 200 and rendered 'PDP AI-Readiness' and 'Application shell'"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. Next.js 16 App Router + TypeScript per docs/technical-discovery.md. lint = eslint (flat config); typecheck = tsc --noEmit. No test runner yet."
+  },
+  {
+    "id": "bootstrap-database",
+    "area": "bootstrap",
+    "title": "Postgres persistence layer",
+    "user_visible_behavior": "The app connects to Postgres through an ORM and applies migrations that create the initial schema.",
+    "depends_on": [
+      "bootstrap-app-shell"
+    ],
+    "status": "passing",
+    "verification": [
+      "Run the migration command and confirm tables are created",
+      "A health check reports database connectivity"
+    ],
+    "evidence": [
+      "npm run db:migrate applied migration drizzle/0000_condemned_blob.sql",
+      "psql \\dt shows public.app_metadata with key/value/updated_at columns",
+      "GET /api/health -> 200 {\"status\":\"ok\",\"database\":{\"ok\":true}}",
+      "GET /api/health with an unreachable DATABASE_URL -> 503 {\"status\":\"degraded\"}"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. Drizzle ORM + pg. Local dev uses Homebrew postgresql@17 (keg-only) with DATABASE_URL from .env; production targets managed Postgres. The initial migration creates app_metadata only; domain tables come with their own features."
+  },
+  {
+    "id": "bootstrap-auth-gate",
+    "area": "bootstrap",
+    "title": "Shared password gate",
+    "user_visible_behavior": "Unauthenticated visitors are blocked; entering the shared password grants access to the app.",
+    "depends_on": [
+      "bootstrap-app-shell"
+    ],
+    "status": "passing",
+    "verification": [
+      "Request the app without a session -> blocked or redirected",
+      "Submit the correct password -> access granted",
+      "Submit a wrong password -> denied"
+    ],
+    "evidence": [
+      "GET / without cookie -> 307 redirect to /login?next=%2F",
+      "POST /api/auth/login with wrong password -> 401",
+      "POST /api/auth/login with correct password -> 200 and sets httpOnly pdp_auth cookie",
+      "GET / with cookie -> 200; protected /api/auth/logout without cookie -> 401",
+      "POST /api/auth/logout clears the cookie; subsequent GET / -> 307"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. Signed HMAC cookie (Web Crypto) verified in proxy.ts (Next 16 proxy convention). /login, /api/auth/login, and /api/health are public. APP_PASSWORD comes from env; temporary until real auth (docs/technical-discovery.md)."
+  },
+  {
+    "id": "bootstrap-background-jobs",
+    "area": "bootstrap",
+    "title": "Background job runner",
+    "user_visible_behavior": "The app can enqueue a job and a worker processes it asynchronously with visible completion status.",
+    "depends_on": [
+      "bootstrap-app-shell"
+    ],
+    "status": "passing",
+    "verification": [
+      "Enqueue a sample job",
+      "Worker processes it and marks it done",
+      "A failed job is recorded with an error"
+    ],
+    "evidence": [
+      "POST /api/jobs {type:sample.echo} -> 201, job pending",
+      "POST /api/jobs/drain -> {processed:1}; job becomes completed with result",
+      "sample.fail with maxAttempts 1 -> failed with lastError 'sample job failed as requested'",
+      "npm run worker (tsx) processed an enqueued job: pending -> completed",
+      "Unauthenticated POST /api/jobs -> 401"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. Postgres-backed queue (jobs table) with FOR UPDATE SKIP LOCKED claiming, attempts/backoff, and a worker (npm run worker). A hosted queue (QStash/Inngest) can replace the worker later for serverless scheduling."
+  },
+  {
+    "id": "model-provider-adapter",
+    "area": "integrations",
+    "title": "Model provider adapter",
+    "user_visible_behavior": "The system can call a configured model through one adapter interface and receive a structured response.",
+    "depends_on": [
+      "bootstrap-app-shell"
+    ],
+    "status": "passing",
+    "verification": [
+      "Unit test with a mocked provider returns a parsed response",
+      "Provider errors are surfaced as a typed failure"
+    ],
+    "evidence": [
+      "npm test -> 7/7 passing (node:test + tsx)",
+      "google adapter parses text/usage and sends systemInstruction + responseMimeType",
+      "missing credentials, HTTP 401, HTTP 429, and non-JSON responses map to typed ProviderError codes",
+      "openai and anthropic adapters parse mocked responses",
+      "Live Gemini call (npm run smoke:provider, model gemini-3.6-flash) returned {\"ok\": true} with usage"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. ModelProvider interface + REST adapters for Google/OpenAI/Anthropic with a ProviderError type. Google is configured (GEMINI_API_KEY) and live-smoked on gemini-3.6-flash; gemini-2.5-flash returns 404 for new users. OpenAI/Anthropic are verified with mocks only until keys exist."
+  },
+  {
+    "id": "model-profiles-catalog",
+    "area": "models",
+    "title": "Model profiles catalog",
+    "user_visible_behavior": "Enabled model profiles (provider, model id, credential reference) are stored and listed for selection.",
+    "depends_on": [
+      "model-provider-adapter",
+      "bootstrap-database"
+    ],
+    "status": "passing",
+    "verification": [
+      "Seed profiles and list them via the API",
+      "Disabling a profile removes it from the selectable list"
+    ],
+    "evidence": [
+      "npm run db:seed inserted 2 Google profiles, enabled based on GEMINI_API_KEY",
+      "GET /api/model-profiles returns key/provider/model/label/credentialRef/enabled",
+      "GET ?enabled=true -> 2; PATCH enabled=false -> 1; re-enable -> 2",
+      "POST /api/model-profiles/seed is idempotent ({inserted:0,total:2})",
+      "Unauthenticated GET -> 401; npm test -> 10/10"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. model_profiles table; credentialRef stores the env var name, never the secret. Default catalog is Google; extra providers/models can be added via the MODEL_PROFILES env JSON. Seeding never overwrites a manual enabled/disabled state."
+  },
+  {
+    "id": "brand-grouping",
+    "area": "domain",
+    "title": "Brand detection and override",
+    "user_visible_behavior": "A PDP is associated with a brand auto-detected from its domain or JSON-LD, and the brand can be renamed or merged.",
+    "depends_on": [
+      "bootstrap-database"
+    ],
+    "status": "passing",
+    "verification": [
+      "Adding a PDP creates or groups its brand",
+      "Renaming a brand persists",
+      "Merging two brands moves their PDPs"
+    ],
+    "evidence": [
+      "Two rothys.com PDPs grouped under one brand (pdpCount 2)",
+      "explicit brandName and JSON-LD brand are preferred over the domain label",
+      "PATCH rename -> \"Rothy's\" persists in GET /api/brands",
+      "Merge example.com into rothys.com -> source brand removed, target pdpCount 3",
+      "Invalid URL -> 400; npm test -> 15/15"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. brands + pdps tables; grouping key is the registrable domain (simple last-two-labels heuristic; manual merge covers subdomains/marketplaces). Brand detection lives in src/brands/detect.ts."
+  },
+  {
+    "id": "pdp-fetch-raw-capture",
+    "area": "capture",
+    "title": "PDP fetch with raw capture",
+    "user_visible_behavior": "Given a URL, the system fetches the page as a crawler would and stores the raw HTML plus fetch metadata.",
+    "depends_on": [
+      "bootstrap-database"
+    ],
+    "status": "passing",
+    "verification": [
+      "Fetch a fixture URL and confirm raw HTML is stored",
+      "A blocked or CAPTCHA response is recorded as a fetch failure with status"
+    ],
+    "evidence": [
+      "POST /api/pdps/[id]/fetch on example.com -> status 200, ok true, blocked false, htmlLength 559",
+      "raw_html persisted in pdp_fetches (559 chars verified via psql)",
+      "H&M URL -> status 403, ok false, blocked true, reason http_403",
+      "GET /api/pdps/[id]/fetch returns the fetch history; unknown pdp -> 404",
+      "npm test -> 20/20 (bot-block status/body detection, HTML capture, timeout)"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. HTTP fetch with a browser user agent (no headless browser); stores raw HTML, status, content type, byte size, blocked flag/reason, and errors. Timeout and UA are env-configurable (FETCH_TIMEOUT_MS, FETCH_USER_AGENT)."
+  },
+  {
+    "id": "pdp-content-normalization",
+    "area": "capture",
+    "title": "PDP content normalization",
+    "user_visible_behavior": "Captured HTML is normalized to text/markdown with JSON-LD extracted and the primary CTA, price, and availability preserved.",
+    "depends_on": [
+      "pdp-fetch-raw-capture"
+    ],
+    "status": "passing",
+    "verification": [
+      "Normalized fixture includes CTA text, price, and availability",
+      "JSON-LD is extracted separately",
+      "Fixture corpus produces stable output"
+    ],
+    "evidence": [
+      "tests/fixtures/sample-pdp.html -> content includes 'Add to Cart', '$65.00', 'Out Of Stock Online'",
+      "signals.ctaTexts/priceTexts/availabilityTexts populated from the fixture",
+      "jsonLd contains the Product block and ignores an invalid block",
+      "nav/header/footer boilerplate excluded; output is deterministic across runs",
+      "Live flow: books.toscrape PDP -> fetch + normalize returns title 'A Light in the Attic', price '£51.77', availability 'In stock (22 available)'; unknown pdp -> 404",
+      "npm test -> 25/25"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. cheerio-based normalization (src/capture/normalize.ts): strips scripts/nav/footer, builds text/markdown, extracts JSON-LD, and captures price/availability/CTA signals. Content is truncated at NORMALIZE_MAX_CHARS (default 20000). Fixture corpus under tests/fixtures/."
+  },
+  {
+    "id": "agent-access-robots",
+    "area": "capture",
+    "title": "Agent access via robots.txt",
+    "user_visible_behavior": "The system reports whether robots.txt allows AI/agent crawlers for the target host.",
+    "depends_on": [
+      "pdp-fetch-raw-capture"
+    ],
+    "status": "passing",
+    "verification": [
+      "A fixture robots.txt with GPTBot disallow is flagged",
+      "A permissive fixture is reported as allowed"
+    ],
+    "evidence": [
+      "Unit tests: GPTBot disallow -> allowed false/blockedBots GPTBot; permissive -> allowed true; wildcard disallow blocks all; specific allow overrides wildcard",
+      "Live: nytimes.com robots.txt -> allowed false, blocked GPTBot/ChatGPT-User/OAI-SearchBot/ClaudeBot/Claude-Web/anthropic-ai",
+      "Live: example.com (no robots.txt, 404) -> present false, allowed true",
+      "GET /api/pdps/[id]/robots returns the latest report; unknown pdp -> 404",
+      "npm test -> 32/32"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. robots_reports table + migration 0006; parses user-agent groups with longest-match allow/disallow for the site root and checks a list of AI crawlers (AI_CRAWLERS). Missing robots.txt is treated as allowed."
+  },
+  {
+    "id": "non-pdp-url-detection",
+    "area": "capture",
+    "title": "Non-PDP URL detection",
+    "user_visible_behavior": "URLs that are not product pages (homepage, category, error) are rejected or flagged instead of scored.",
+    "depends_on": [
+      "pdp-fetch-raw-capture",
+      "pdp-content-normalization"
+    ],
+    "status": "passing",
+    "verification": [
+      "A homepage fixture is flagged as non-PDP",
+      "A valid PDP fixture is accepted",
+      "A 404 fixture is rejected with a reason"
+    ],
+    "evidence": [
+      "Unit tests: homepage -> homepage, valid PDP (JSON-LD) -> product/high, single-price PDP -> product, 404 -> error http_404, blocked -> error, category (many prices) -> category",
+      "Live: books.toscrape product page -> product/isPdp true; homepage -> homepage/high; 404 URL -> error http_404",
+      "npm test -> 38/38"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. Rule-based classifier (src/capture/classify.ts) using HTTP status, block flag, URL path, JSON-LD types, price/CTA signals, and title. GET /api/pdps/[id]/classification classifies from the latest fetch. Advisory: callers decide whether to reject."
+  },
+  {
+    "id": "deterministic-checks-d1",
+    "area": "checks",
+    "title": "Deterministic checks: machine-readable data",
+    "user_visible_behavior": "D1 checks produce pass/partial/fail findings from JSON-LD and HTML without a model call.",
+    "depends_on": [
+      "pdp-content-normalization"
+    ],
+    "status": "passing",
+    "verification": [
+      "Fixture corpus yields the expected D1 outcomes",
+      "Each finding carries an evidence location"
+    ],
+    "evidence": [
+      "Fixture corpus (tests/fixtures/d1-complete.json, d1-partial.json, d1-empty.json) yields expected pass/partial/fail",
+      "Every finding has dimension=d1, type=deterministic, a weight, and non-empty evidence",
+      "Live Rothy's PDP -> summary pass 9 / partial 0 / fail 3 (missing priceValidUntil, shippingDetails, hasMerchantReturnPolicy)",
+      "PDP without a normalization -> 422",
+      "npm test -> 42/42"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. Framework in src/checks/types.ts; D1 checks in src/checks/d1.ts (12 weighted checks). Runs over extracted JSON-LD (incl. ProductGroup variants) with no model call. Route GET /api/pdps/[id]/checks/d1."
+  },
+  {
+    "id": "deterministic-checks-d2",
+    "area": "checks",
+    "title": "Deterministic checks: content extractability",
+    "user_visible_behavior": "D2 deterministic checks produce findings from raw and normalized content.",
+    "depends_on": [
+      "pdp-content-normalization"
+    ],
+    "status": "passing",
+    "verification": [
+      "Fixture corpus yields the expected D2 outcomes"
+    ],
+    "evidence": [
+      "Fixtures: d2-good.html -> 8/8 pass; d2-js-only.html -> main/heading/attributes/specs/description/locale fail; d2-hidden.html -> content_not_hidden_js partial",
+      "Live Rothy's PDP -> summary pass 7 / partial 1 / fail 0 (1 hidden element with text)",
+      "Every finding has dimension=d2, type=deterministic, a weight, and non-empty evidence",
+      "npm test -> 46/46"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. 8 deterministic D2 checks in src/checks/d2.ts (content in raw HTML, JS-hidden content, heading hierarchy, attribute text, parseable specs, substantive description, locale, text_clean). Route GET /api/pdps/[id]/checks/d2."
+  },
+  {
+    "id": "deterministic-checks-d3",
+    "area": "checks",
+    "title": "Deterministic checks: trust and policy signals",
+    "user_visible_behavior": "D3 checks detect shipping, returns, warranty, reviews, contact, legal, privacy, and tax signals.",
+    "depends_on": [
+      "pdp-content-normalization"
+    ],
+    "status": "passing",
+    "verification": [
+      "Fixture corpus yields the expected D3 outcomes"
+    ],
+    "evidence": [
+      "Fixtures: d3-good.html -> 11/11 pass; d3-empty.html -> shipping/returns/warranty/reviews/contact/privacy fail; JSON-LD AggregateRating makes reviews pass",
+      "Live Rothy's PDP -> pass 8 / fail 3 (no delivery estimate, no warranty, no legal identity)",
+      "Every finding has dimension=d3, type=deterministic, a weight, and non-empty evidence",
+      "npm test -> 50/50"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. 11 deterministic D3 checks in src/checks/d3.ts (shipping, delivery time, returns, return window, warranty, reviews, review verification, contact, legal identity, privacy, tax/duties). Shared JSON-LD helpers in src/checks/jsonld.ts. Route GET /api/pdps/[id]/checks/d3."
+  },
+  {
+    "id": "deterministic-checks-d4",
+    "area": "checks",
+    "title": "Deterministic checks: transactional readiness",
+    "user_visible_behavior": "D4 checks detect price, stock, currency, CTA, payment methods, robots, and bot-block signals.",
+    "depends_on": [
+      "pdp-content-normalization",
+      "agent-access-robots"
+    ],
+    "status": "passing",
+    "verification": [
+      "Fixture corpus yields the expected D4 outcomes"
+    ],
+    "evidence": [
+      "Fixtures: d4-good.html -> 10/10 pass; d4-bad.html -> price/CTA/payment/robots/fetch/friction fail; missing robots -> partial",
+      "Live Rothy's PDP -> pass 9 / partial 1 (robots auto-captured; 1 friction marker)",
+      "Live IKEA PDP (price rendered with JS) -> price/currency/stock pass from structured data ('Price is in the structured data (24.99); the page shows it with JavaScript.')",
+      "Live IKEA bed PDP (buy button rendered with JS) -> add_to_cart pass ('No buy button in the raw HTML (the page adds it with JavaScript); the offer is available in the product data.')",
+      "Every finding has dimension=d4, type=deterministic, a weight, and non-empty evidence",
+      "npm test -> 98/98"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. 10 deterministic D4 checks in src/checks/d4.ts (price, no login gate, stock, variant stock, currency, add-to-cart, payment methods, robots, bot-block, friction). price_displayed/currency_locale/stock_signal fall back to JSON-LD Offer data when the page renders them with JavaScript. runD4ForPdp auto-captures robots.txt if absent. Route GET /api/pdps/[id]/checks/d4."
+  },
+  {
+    "id": "model-evaluation-call",
+    "area": "evaluation",
+    "title": "Model evaluation call with schema validation",
+    "user_visible_behavior": "The system sends the prompt to each selected model, validates the JSON response, retries once, and marks failures.",
+    "depends_on": [
+      "model-provider-adapter",
+      "pdp-content-normalization"
+    ],
+    "status": "passing",
+    "verification": [
+      "A mocked valid response passes validation",
+      "An invalid response triggers repair, and a second failure marks the model failed",
+      "All assigned check_ids appear exactly once"
+    ],
+    "evidence": [
+      "npm test -> 60/60 (valid, repair-then-success, double-invalid fail, provider-error fail, validator exact-id rules, prompt contents)",
+      "Live Gemini gemini-3.5-flash -> completed in 1 attempt, usage 7425/596, 9/9 checks; caught JSON-LD InStock vs visible Out Of Stock contradiction",
+      "Validator rejects missing, duplicate, extra, and mis-enum'd check ids",
+      "gemini-3.6-flash returned a transient HTTP 503 (surfaced as a failed result)"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. Prompt (src/evaluation/prompt.ts), schema validation (validate.ts), and evaluateWithModel (run.ts) with one repair attempt then failed. 9 model-judged checks. Real smoke via npm run smoke:evaluation; works with gemini-3.5-flash / gemini-3.1-flash-lite."
+  },
+  {
+    "id": "brand-perception-capture",
+    "area": "evaluation",
+    "title": "Brand perception capture",
+    "user_visible_behavior": "Each model's unscored 1-2 line brand perception is stored with the evaluation.",
+    "depends_on": [
+      "model-evaluation-call"
+    ],
+    "status": "passing",
+    "verification": [
+      "The response brand_perception is stored and returned with the model result"
+    ],
+    "evidence": [
+      "npm test -> 62/62 (completed stores brandPerception+checks; failed stores error, no brand perception)",
+      "Live Gemini via model profile -> POST /api/pdps/[id]/model-evaluations returns status completed, attempts 1, 9 checks, brand_perception text",
+      "GET /api/pdps/[id]/model-evaluations returns the stored evaluation",
+      "brand_perception persisted in the model_evaluations table (verified via psql)"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. model_evaluations table + migration 0007; runAndRecordModelEvaluation loads the latest normalization, resolves a model profile (or provider+model), calls evaluateWithModel, and stores checks + brand perception. Routes GET/POST /api/pdps/[id]/model-evaluations."
+  },
+  {
+    "id": "dimension-scoring-engine",
+    "area": "evaluation",
+    "title": "Dimension scoring engine",
+    "user_visible_behavior": "Weighted check outcomes and caps produce 0-10 per-dimension scores, plus an aggregate across models.",
+    "depends_on": [
+      "deterministic-checks-d1",
+      "deterministic-checks-d2",
+      "deterministic-checks-d3",
+      "deterministic-checks-d4",
+      "model-evaluation-call"
+    ],
+    "status": "passing",
+    "verification": [
+      "Unit tests cover pass/partial/fail weighting",
+      "The cap rule lowers a critical-failure dimension",
+      "The aggregate equals the mean of model scores"
+    ],
+    "evidence": [
+      "npm test -> 71/71 (weighting 10/5/0, mixed 6.7, D1 cap to 3, D3 cap only when shipping+returns fail, D4 cap on bot-block, aggregate 6 and 9.5, per-dimension aggregation 5)",
+      "modelOutputToFindings maps check ids to dimensions and model weights",
+      "scoreDimensions returns a score for all four dimensions"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. Formula: round(10 * sum(weight*outcome)/sum(weight),1) with pass=1/partial=0.5/fail=0. Caps: D1=3, D2=4, D3=4, D4=3, triggered by critical deterministic findings (src/scoring/score.ts). Weight calibration is deferred."
+  },
+  {
+    "id": "recommendation-mapping",
+    "area": "evaluation",
+    "title": "Recommendation mapping",
+    "user_visible_behavior": "Failed and partial checks map to canonical recommendations ranked by impact.",
+    "depends_on": [
+      "dimension-scoring-engine"
+    ],
+    "status": "passing",
+    "verification": [
+      "Each failed check yields a recommendation",
+      "Ordering follows weight * (1 - outcome)"
+    ],
+    "evidence": [
+      "npm test -> 75/75",
+      "Failed -> recommendation with impact = weight; partial -> impact = weight*0.5; passes excluded",
+      "Recommendations ordered by impact descending ([3, 1, 0.5])",
+      "Catalog covers every D1-D4 deterministic check id and every model-judged check id"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. Canonical catalog (src/recommendations/catalog.ts) with one action+why per check id; mapRecommendations ranks by impact = round2(weight * (1 - outcome)), tie-broken by checkId."
+  },
+  {
+    "id": "evaluation-run-orchestration",
+    "area": "evaluation",
+    "title": "Evaluation run orchestration",
+    "user_visible_behavior": "Submitting a PDP and models creates an evaluation and a background job that runs fetch, checks, models, scoring, and recommendations to completion.",
+    "depends_on": [
+      "bootstrap-background-jobs",
+      "dimension-scoring-engine",
+      "recommendation-mapping",
+      "brand-perception-capture",
+      "non-pdp-url-detection"
+    ],
+    "status": "passing",
+    "verification": [
+      "An end-to-end run on a fixture reaches a stored Completed result",
+      "All step outputs are persisted"
+    ],
+    "evidence": [
+      "Live run via API + worker: status created -> fetching -> evaluating -> completed",
+      "aggregate d1 7.1 / d2 8.6 / d3 7.4 / d4 8.8; per-model gemini-3.5-flash completed",
+      "41 deterministic findings and 14 recommendations stored; top recommendation from the catalog",
+      "Step outputs persisted: pdp_fetches=1, pdp_normalizations=1, model_evaluations=1 (linked to the evaluation)",
+      "npm test -> 77/77"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. evaluations table + migration 0008; model_evaluations now links to an evaluation. createEvaluation enqueues an evaluation.run job; runEvaluation (src/evaluation/orchestrator.ts) performs fetch, normalize, classify, checks, per-model calls, scoring, and recommendations. Routes GET/POST /api/evaluations and GET /api/evaluations/[id]."
+  },
+  {
+    "id": "evaluation-status-states",
+    "area": "evaluation",
+    "title": "Evaluation status states",
+    "user_visible_behavior": "An evaluation exposes Created, Fetching, Evaluating, Completed, Partial, and Failed with a reason.",
+    "depends_on": [
+      "evaluation-run-orchestration"
+    ],
+    "status": "passing",
+    "verification": [
+      "A simulated fetch block results in Failed with a reason",
+      "One model failing results in Partial with an explanation"
+    ],
+    "evidence": [
+      "npm test -> 79/79 (terminal status set and per-status descriptions)",
+      "Live blocked fetch (H&M) -> status failed, reason fetch_blocked:http_403, isTerminal true",
+      "Live one-model failure (gemini-3.1-flash-lite ok + gemini-2.5-flash 404) -> status partial, reason models_failed:1/2, per-model statuses exposed, aggregate from the successful model",
+      "Observed transitions created -> fetching -> evaluating -> completed on a good run",
+      "GET /api/evaluations/[id]/status returns status, label, reason, isTerminal, startedAt, finishedAt"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. src/evaluation/status.ts (isTerminalStatus, describeEvaluationStatus) and route /api/evaluations/[id]/status. The orchestrator sets reasons: fetch_blocked:*, not_a_pdp:*, all_models_failed, models_failed:N/M."
+  },
+  {
+    "id": "retry-failed-models",
+    "area": "evaluation",
+    "title": "Retry failed models",
+    "user_visible_behavior": "Failed models within a Partial evaluation can be retried and merged into the same evaluation.",
+    "depends_on": [
+      "evaluation-status-states",
+      "model-evaluation-call"
+    ],
+    "status": "passing",
+    "verification": [
+      "Retry a failed model appends the result and updates the status",
+      "Retry does not create a new snapshot"
+    ],
+    "evidence": [
+      "npm test -> 82/82 (resolveEvaluationStatus completed/partial/failed)",
+      "Live: partial evaluation with one failed model -> POST /api/evaluations/[id]/retry returned retried 1, stillFailed 0, status completed",
+      "The retried model_evaluation became completed with 9 checks and a brand perception",
+      "Evaluation row count unchanged before/after (no new snapshot); retrying a completed evaluation -> 400 not_retryable"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. retryFailedModels (src/evaluation/orchestrator.ts) re-runs failed model rows in place, recomputes scores/recommendations/status, and never creates a new snapshot. Route POST /api/evaluations/[id]/retry; report shows a Retry button when models failed."
+  },
+  {
+    "id": "home-pdp-entry",
+    "area": "ui",
+    "title": "Home PDP entry",
+    "user_visible_behavior": "The home screen accepts a PDP URL and a model selection and submits an evaluation.",
+    "depends_on": [
+      "evaluation-run-orchestration",
+      "model-profiles-catalog"
+    ],
+    "status": "passing",
+    "verification": [
+      "Submitting a URL and models creates an evaluation",
+      "An invalid URL is rejected with a message"
+    ],
+    "evidence": [
+      "GET / (authenticated) -> 200 with the evaluation form, PDP URL input, model checkboxes (Gemini 3.5 Flash), and submit button",
+      "POST /api/evaluations with an invalid URL -> 400 {\"error\":\"url must be a valid absolute URL\"}",
+      "POST with an empty modelProfileIds -> 400",
+      "Form posts to POST /api/evaluations (previously verified to create an evaluation) and redirects to /evaluations/[id]",
+      "npm test -> 79/79; npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. Home server component (app/page.tsx) loads enabled model profiles; client form (app/evaluation-form.tsx) validates the URL and models, submits, and redirects to the report route. Uses DESIGN.md components."
+  },
+  {
+    "id": "home-brand-grouped-list",
+    "area": "ui",
+    "title": "Brand-grouped PDP list",
+    "user_visible_behavior": "The home screen lists previously evaluated PDPs grouped by brand.",
+    "depends_on": [
+      "brand-grouping",
+      "home-pdp-entry"
+    ],
+    "status": "passing",
+    "verification": [
+      "Two PDPs under one brand appear in one group",
+      "A PDP under another brand appears in a separate group"
+    ],
+    "evidence": [
+      "Home rendered 2 brand groups (Rothys, Example) with 3 PDP rows: Rothys x2 (kids-clog-a, kids-clog-b) and Example x1",
+      "Each PDP row links to its latest evaluation status (/evaluations/[id])",
+      "npm test -> 79/79; npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. Home server component loads listBrands + listPdps + recent evaluations, groups PDPs by brand, and shows the latest evaluation link per PDP. Uses brand override/merge data."
+  },
+  {
+    "id": "report-scores-view",
+    "area": "ui",
+    "title": "Report scores view",
+    "user_visible_behavior": "The report shows per-model and aggregate 0-10 scores for the four dimensions.",
+    "depends_on": [
+      "evaluation-run-orchestration"
+    ],
+    "status": "passing",
+    "verification": [
+      "A fixture evaluation renders per-model and aggregate scores",
+      "Disagreement between models is visible"
+    ],
+    "evidence": [
+      "GET /evaluations/[id] (fixture with 2 models) -> 200",
+      "Renders all four dimension labels and aggregate values 8.1/6.8/6.7/9.0",
+      "Shows both models and their per-model scores; d1 disagreement visible (7.1 vs 9.0)",
+      "npm test -> 79/79; npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. Report route app/evaluations/[id]/page.tsx; shows status, reason, classification, rubric, aggregate scores, and per-model score chips. Auto-refreshes via ReportRefresh while the evaluation is not terminal. DIMENSION_LABELS in src/scoring/score.ts."
+  },
+  {
+    "id": "report-findings",
+    "area": "ui",
+    "title": "Report findings",
+    "user_visible_behavior": "The report shows findings with evidence for each dimension.",
+    "depends_on": [
+      "report-scores-view"
+    ],
+    "status": "passing",
+    "verification": [
+      "Fixture findings render with evidence and status",
+      "Model-judged and deterministic findings are distinguishable"
+    ],
+    "evidence": [
+      "GET /evaluations/[id] -> 200 rendering fail/partial status chips with check ids and evidence text",
+      "Deterministic findings labelled 'deterministic'; model findings labelled 'model · <model name>'",
+      "Passing checks listed in a collapsible section ('N passing checks')",
+      "npm test -> 79/79; npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. FindingsSection (app/evaluations/[id]/findings.tsx) merges evaluation.deterministicFindings with per-model checks, groups by dimension, and sorts fail/partial before pass. Evidence shown per docs/evaluation-contract.md."
+  },
+  {
+    "id": "report-recommendations",
+    "area": "ui",
+    "title": "Report recommendations",
+    "user_visible_behavior": "The report shows the prioritized recommendation list and the brand perception summary.",
+    "depends_on": [
+      "report-scores-view",
+      "recommendation-mapping",
+      "brand-perception-capture"
+    ],
+    "status": "passing",
+    "verification": [
+      "A fixture evaluation renders ordered recommendations",
+      "Brand perception is shown as unscored"
+    ],
+    "evidence": [
+      "GET /evaluations/[id] -> 200 rendering both recommendations with impact pills and dimension labels",
+      "Ordered by impact descending (2.0 before 0.5) as produced by recommendation-mapping",
+      "Brand perception shown per model under an 'unscored' label (both models' summaries rendered)",
+      "npm test -> 79/79; npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. RecommendationsSection (app/evaluations/[id]/recommendations.tsx) renders evaluation.recommendations and per-model brand perception (labelled unscored). Ordering comes from recommendation-mapping. Completes the 5 UI features needed to try the site in a browser."
+  },
+  {
+    "id": "pdp-evaluation-history",
+    "area": "ui",
+    "title": "PDP evaluation history",
+    "user_visible_behavior": "A PDP shows its previous evaluations as snapshots and the report defaults to the latest.",
+    "depends_on": [
+      "evaluation-run-orchestration",
+      "home-brand-grouped-list"
+    ],
+    "status": "passing",
+    "verification": [
+      "Two evaluations of one PDP appear as history",
+      "The latest is shown by default"
+    ],
+    "evidence": [
+      "Two evaluations created for one PDP; /pdps/[id] -> 307 redirect to the latest evaluation",
+      "Report History section lists both snapshots with a 'latest' tag and a 'viewing' tag on the current one",
+      "Home PDP links go to /pdps/[id] so the latest is shown by default",
+      "npm test -> 91/91; npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. listEvaluationsForPdp / getLatestEvaluationForPdp in src/evaluation/orchestrator.ts; HistorySection (app/evaluations/[id]/history.tsx); /pdps/[id] redirects to the latest evaluation. Snapshots are immutable per docs/domain-model.md."
+  },
+  {
+    "id": "evaluation-observability",
+    "area": "operations",
+    "title": "Evaluation observability",
+    "user_visible_behavior": "Each evaluation records per-step status plus per-model latency, tokens, and estimated cost, with errors tracked.",
+    "depends_on": [
+      "evaluation-run-orchestration"
+    ],
+    "status": "passing",
+    "verification": [
+      "A run produces structured step logs and per-model metrics",
+      "A forced error appears in error tracking"
+    ],
+    "evidence": [
+      "npm test -> 85/85 (estimateCostUsd pricing)",
+      "Live success run: steps fetch/normalize/classify/deterministic_checks/model:*/scoring with statuses and durations; model usage had latencyMs 6304, inputTokens 7425, outputTokens 657, estimatedCostUsd 0.000754",
+      "Forced error (blocked fetch) recorded a failed 'fetch' step with message fetch_blocked:http_403 and evaluation status failed",
+      "GET /api/evaluations/[id]/steps returns the ordered step log"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. evaluation_steps table + migration 0009; recordStep/listSteps in src/evaluation/observability.ts; runEvaluation and retryFailedModels record steps; run.ts records per-call latency and estimated cost. Pricing is a best-effort estimate (src/evaluation/pricing.ts). Report shows a Steps & metrics section."
+  },
+  {
+    "id": "per-evaluation-cost-ceiling",
+    "area": "operations",
+    "title": "Per-evaluation cost ceiling",
+    "user_visible_behavior": "An evaluation enforces a maximum model count and an estimated cost ceiling, rejecting or limiting runs that exceed it.",
+    "depends_on": [
+      "evaluation-run-orchestration",
+      "model-profiles-catalog"
+    ],
+    "status": "passing",
+    "verification": [
+      "Exceeding the model count is rejected or limited",
+      "Estimated cost over the ceiling is blocked or flagged"
+    ],
+    "evidence": [
+      "npm test -> 91/91 (checkLimits count/cost/unknown, shouldStopForCost, getEvaluationLimits)",
+      "With MAX_MODELS_PER_EVALUATION=1: POST with 2 profiles -> 400 too_many_models",
+      "With MAX_EVALUATION_COST_USD=0.001: POST with 1 model -> 400 cost_ceiling_exceeded",
+      "With defaults: POST within limits -> 201 created; runEvaluation also stops mid-run when accumulated estimated cost reaches the ceiling (reason cost_ceiling_exceeded)"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. src/evaluation/limits.ts (getEvaluationLimits, checkLimits, shouldStopForCost); enforced in createEvaluation and during runEvaluation. Config via MAX_MODELS_PER_EVALUATION, MAX_EVALUATION_COST_USD, ASSUMED_INPUT_TOKENS, ASSUMED_OUTPUT_TOKENS (0 disables the cost ceiling)."
+  },
+  {
+    "id": "cx-live-run-progress",
+    "area": "ui",
+    "title": "Live run progress",
+    "user_visible_behavior": "While an evaluation runs, the report shows the current step and the steps completed so far.",
+    "depends_on": [
+      "report-scores-view",
+      "evaluation-observability"
+    ],
+    "status": "passing",
+    "verification": [
+      "A running evaluation shows a progress list of completed and current steps"
+    ],
+    "evidence": [
+      "Fixture evaluation in 'evaluating' with two steps: report shows the Progress card, the plain-language step copy ('Fetching the page as a search engine would', 'Reading and cleaning the content'), and a 'running' row",
+      "A completed evaluation hides the Progress card",
+      "npm test -> 91/91; npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. ProgressSection (app/evaluations/[id]/progress.tsx) renders evaluation_steps with friendly copy (src/evaluation/copy.ts describeStep); ReportRefresh now refreshes on an interval while not terminal."
+  },
+  {
+    "id": "cx-executive-summary",
+    "area": "ui",
+    "title": "Report executive summary",
+    "user_visible_behavior": "The report shows a one-line verdict and the top three fixes at the top.",
+    "depends_on": [
+      "report-scores-view",
+      "report-recommendations"
+    ],
+    "status": "passing",
+    "verification": [
+      "A completed evaluation renders a verdict and the top three recommendations"
+    ],
+    "evidence": [
+      "Completed report shows a Summary card: 'Overall AI readiness: 8.2 / 10' with a band chip and a 'Top fixes' list (action + plain dimension name)",
+      "Failed evaluations show a friendly summary instead of scores",
+      "npm test -> 93/93 (scoreBand, overallScore); npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. SummarySection (app/evaluations/[id]/summary.tsx) using overallScore/scoreBand (src/scoring/bands.ts) and the ordered recommendations. Rendered at the top of the report."
+  },
+  {
+    "id": "cx-score-bands",
+    "area": "ui",
+    "title": "Score bands and colors",
+    "user_visible_behavior": "Scores are shown with a plain-language band (weak/fair/good/strong) and a color.",
+    "depends_on": [
+      "report-scores-view"
+    ],
+    "status": "passing",
+    "verification": [
+      "Dimension scores render with a band label and a band color class"
+    ],
+    "evidence": [
+      "Completed report renders colored score values ('score-value band-...') and band labels (Good, Strong) per dimension",
+      "npm test -> 93/93 (scoreBand ranges); npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. src/scoring/bands.ts (scoreBand); score cards show a band chip and color the score value via band-needs-work/fair/good/strong classes."
+  },
+  {
+    "id": "cx-friendly-errors",
+    "area": "ui",
+    "title": "Friendly error states",
+    "user_visible_behavior": "Failed and partial evaluations show a plain-language explanation with a next step.",
+    "depends_on": [
+      "evaluation-status-states",
+      "report-scores-view"
+    ],
+    "status": "passing",
+    "verification": [
+      "A blocked or partial evaluation shows a friendly message instead of a raw reason code"
+    ],
+    "evidence": [
+      "Partial fixture (models_failed:1/2) shows 'Some models failed' and '1 of 2 models could not be reached'; the raw code is not shown",
+      "Failed fixture (fetch_blocked:http_403) shows \"We couldn't reach the page\" in the summary; the raw code is not shown",
+      "npm test -> 93/93; npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. src/evaluation/copy.ts (describeReason) maps fetch_blocked/fetch_failed/not_a_pdp/cost_ceiling_exceeded/all_models_failed/models_failed to plain copy with a next step; shown in the summary (failed) and status card (partial)."
+  },
+  {
+    "id": "cx-responsive-and-score-visuals",
+    "area": "ui",
+    "title": "Responsive layout and score visuals",
+    "user_visible_behavior": "The report has a score bar per dimension and lays out cleanly on narrow screens.",
+    "depends_on": [
+      "report-scores-view"
+    ],
+    "status": "passing",
+    "verification": [
+      "Each dimension renders a 0-10 bar reflecting its score; the layout stacks on small screens"
+    ],
+    "evidence": [
+      "Completed report renders 4 score bars with widths 75/86/74/92% matching the aggregate scores",
+      "Responsive rules added: score grid stacks under 640px, header stacks, smaller padding and table font",
+      "npm test -> 93/93; npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. Score bar (score-bar/score-bar-fill) colored by band; media queries for <=640px in app/globals.css."
+  },
+  {
+    "id": "cx-auto-process",
+    "area": "ui",
+    "title": "Auto-process evaluations in the app",
+    "user_visible_behavior": "Evaluations are processed automatically while the report page is open, with no separate worker to start.",
+    "depends_on": [
+      "evaluation-run-orchestration",
+      "bootstrap-background-jobs",
+      "cx-live-run-progress"
+    ],
+    "status": "passing",
+    "verification": [
+      "Creating an evaluation and opening its report advances it to a terminal state without running a separate worker"
+    ],
+    "evidence": [
+      "Verified no node worker process running; created an evaluation (status created) and POST /api/jobs/drain (what the report page does on each poll) returned {processed:1} and the evaluation reached completed",
+      "ReportRefresh posts /api/jobs/drain while not terminal; SKIP LOCKED prevents concurrent drains from double-processing",
+      "npm test -> 93/93; npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. Evaluations are processed automatically while the report page is open; the worker (npm run worker) remains optional for background processing when no tab is open. AGENTS.md Local Environment note updated."
+  },
+  {
+    "id": "cx-plain-language",
+    "area": "ui",
+    "title": "Plain-language findings and recommendations",
+    "user_visible_behavior": "Findings and recommendations are written in plain language, without check ids or schema.org field names.",
+    "depends_on": [
+      "report-findings",
+      "report-recommendations"
+    ],
+    "status": "passing",
+    "verification": [
+      "Findings show a friendly title and translated evidence; recommendations avoid jargon"
+    ],
+    "evidence": [
+      "Report renders friendly titles (e.g. 'Return policy in the product data') and translated evidence ('The return policy is not included in the product data.'), type label 'Automatic check', and plain recommendation actions",
+      "Raw check ids, 'deterministic', and 'Offer.' evidence are no longer shown",
+      "npm test -> 95/95 (guardrail test forbids schema.org jargon in the catalog); npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. src/evaluation/finding-copy.ts (checkTitle, humanizeEvidence, describeCheckType) and a plain-language rewrite of RECOMMENDATION_CATALOG; a test guards against schema.org jargon in recommendation copy."
+  },
+  {
+    "id": "cx-recommendation-fit",
+    "area": "ui",
+    "title": "Recommendation fit line",
+    "user_visible_behavior": "Brand perception includes a second line on when an agent would recommend the product.",
+    "depends_on": [
+      "brand-perception-capture",
+      "report-recommendations"
+    ],
+    "status": "passing",
+    "verification": [
+      "The report shows a 'Would recommend for' line per completed model"
+    ],
+    "evidence": [
+      "Model output schema now includes recommendation_fit (validated, <=200 chars)",
+      "Live run: recommendation_fit stored ('An agent would recommend these for a parent seeking durable, machine-washable, and eco-friendly footwear for children.') and shown as 'Would recommend for:'",
+      "D3 contact evidence now shows 'Contact link present' instead of a customer-review line",
+      "npm test -> 95/95; npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. model_evaluations.recommendation_fit column + migration 0010; prompt, schema, and validation updated (docs/model-evaluation-prompt.md); CONTEXT.md and evaluation-contract.md updated."
+  },
+  {
+    "id": "cx-band-priority-polish",
+    "area": "ui",
+    "title": "Score band colors and recommendation priority",
+    "user_visible_behavior": "Score bands are visually distinct (Needs work / Fair / Good / Excellent) and recommendations show a priority chip and potential score gain.",
+    "depends_on": [
+      "cx-score-bands",
+      "report-recommendations"
+    ],
+    "status": "passing",
+    "verification": [
+      "Good and Excellent use distinct colors; recommendations show High/Medium/Low priority and 'Potential score +X'"
+    ],
+    "evidence": [
+      "Report renders distinct band colors (Good = light green, Excellent = filled deep green) and the label 'Excellent'",
+      "Recommendations show a priority chip ('High/Medium/Low priority') and 'Potential score +X' instead of a bare 'impact'",
+      "npm test -> 96/96 (priorityForImpact, band labels); npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. Excellent band label and distinct colors in src/scoring/bands.ts + globals.css; priorityForImpact in src/recommendations/map.ts; recommendation UI updated."
+  },
+  {
+    "id": "cx-report-navigation",
+    "area": "ui",
+    "title": "Report order and navigation",
+    "user_visible_behavior": "The report has a section nav and a readable order, with technical details collapsed.",
+    "depends_on": [
+      "report-scores-view",
+      "report-findings",
+      "report-recommendations"
+    ],
+    "status": "passing",
+    "verification": [
+      "The report shows a nav with section anchors and the sections appear in a readable order"
+    ],
+    "evidence": [
+      "Report renders a sticky nav with anchors #summary #scores #recommendations #findings #history",
+      "Section order verified ascending: Summary -> Scores -> Recommendations -> Findings -> History -> Details",
+      "'Steps & metrics' is a collapsed <details> by default",
+      "npm test -> 96/96; npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. Report page order changed and a report-nav added; StepsSection is now a collapsed <details>. Anchor scroll offset via [id] scroll-margin-top."
+  },
+  {
+    "id": "cx-hero-command-bar",
+    "area": "ui",
+    "title": "Report hero command bar",
+    "user_visible_behavior": "The report opens with a hero bar showing the product, status, models tested, and an overall readiness gauge.",
+    "depends_on": [
+      "report-scores-view",
+      "cx-report-navigation"
+    ],
+    "status": "passing",
+    "verification": [
+      "The report hero shows product title, status, models, and an overall readiness gauge"
+    ],
+    "evidence": [
+      "Report renders a hero with product title, monospace URL, status badge, brand, detected page type, rubric, and model chips",
+      "Overall readiness gauge (SVG ring) shows the average of the dimension scores",
+      "The sticky section nav renders above the hero (verified nav index < hero index)",
+      "Executive summary merged into the hero: 'Overall readiness' + band + 'Top fixes'; no separate summary card",
+      "Back-to-home action preserved; retry shown when models failed",
+      "npm test -> 96/96; npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. HeroSection + ScoreGauge (app/evaluations/[id]/hero.tsx, score-gauge.tsx). The summary was merged into the hero and the sticky nav moved above it; SummarySection was removed. Design direction inspired by the AgenticLens hero (layered surface, ring gauge, mono for data); documented in DESIGN.md (Report Hero)."
+  },
+  {
+    "id": "cx-js-rendered-note",
+    "area": "ui",
+    "title": "JavaScript-rendered content note",
+    "user_visible_behavior": "When a page builds key content with JavaScript, the report shows a note explaining that some checks may be conservative.",
+    "depends_on": [
+      "report-scores-view",
+      "evaluation-run-orchestration"
+    ],
+    "status": "passing",
+    "verification": [
+      "A JS-heavy PDP shows the JavaScript note; normal PDPs do not"
+    ],
+    "evidence": [
+      "detectJsRendered (src/capture/js-detect.ts): terms present in <script> blocks but missing from the extracted text",
+      "GANT PDP -> evaluation.jsHeavy true and the report shows 'Some content is loaded with JavaScript'",
+      "Rothy's and IKEA evaluations -> jsHeavy false (no over-flagging)",
+      "npm test -> 102/102; npm run build passes"
+    ],
+    "notes": "Inherited implementation and verification from the original project; not reverified in this copy. evaluations.js_heavy column + migration 0011; computed in runEvaluation after normalization; note rendered in the report. Provider errors are also retried (3 attempts) and gemini-3.1-flash-lite is the default model."
+  },
+  {
+    "id": "brand-perception-colour-consistency",
+    "area": "presentation",
+    "title": "Consistent brand perception text colour",
+    "status": "passing",
+    "user_visible_behavior": "Brand description and recommendation fit use the same main text colour.",
+    "verification": [
+      "Confirm both paragraph rules use var(--text)."
+    ],
+    "evidence": [
+      "2026-09-23: baseline ./init.sh passed lint/typecheck and 121 tests; both paragraph CSS declarations use var(--text)."
+    ]
+  }
+]

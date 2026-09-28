@@ -1,0 +1,1 @@
+ALTER TABLE "evaluations" ADD COLUMN "shopper_request" text;

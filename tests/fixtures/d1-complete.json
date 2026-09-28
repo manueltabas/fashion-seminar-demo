@@ -1,0 +1,40 @@
+[
+  {
+    "@context": "https://schema.org/",
+    "@type": "ProductGroup",
+    "name": "The Kids Clog",
+    "brand": { "@type": "Brand", "name": "Test Brand" },
+    "image": "https://example.com/img.png",
+    "description": "A comfortable kids clog.",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.7",
+      "reviewCount": "85"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "65.0",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock",
+      "priceValidUntil": "2027-01-01",
+      "shippingDetails": { "@type": "OfferShippingDetails" },
+      "hasMerchantReturnPolicy": { "@type": "MerchantReturnPolicy" }
+    },
+    "hasVariant": [
+      {
+        "@type": "Product",
+        "sku": "SKU-1",
+        "gtin": "0000000000001",
+        "image": "https://example.com/1.png",
+        "description": "Variant one"
+      },
+      {
+        "@type": "Product",
+        "sku": "SKU-2",
+        "gtin": "0000000000002",
+        "image": "https://example.com/2.png",
+        "description": "Variant two"
+      }
+    ]
+  }
+]

@@ -1,0 +1,10 @@
+[
+  {
+    "@type": "Product",
+    "name": "Partial Product",
+    "offers": {
+      "@type": "Offer",
+      "price": "19.99"
+    }
+  }
+]

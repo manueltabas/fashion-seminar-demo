@@ -1,0 +1,1 @@
+ALTER TABLE "model_evaluations" ADD COLUMN "recommendation_fit" text;
