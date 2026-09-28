@@ -13,7 +13,7 @@
     ],
     "evidence": [
       "2026-09-22: ./init.sh passes, 102/102 tests, lint/typecheck; npm run build passes; GET /api/health 200; authenticated home 200 on port 3001; dedicated fashion_seminar_demo database.",
-      "2026-09-28: Git initialized for GitHub sync; local environment, dependencies and build outputs confirmed ignored; README and setup guide added. No runtime behavior changed or runtime verification repeated."
+      "2026-09-28: Git initialized for GitHub sync; local environment, dependencies and build outputs confirmed ignored; README and setup guide added. No runtime behavior changed or runtime verification repeated. Initial commit b1d908c pushed to private manueltabas/fashion-seminar-demo; local and remote main hashes match."
     ],
     "notes": "No new framework bootstrap. Do not mark inherited tests as fresh evidence. Provider credentials may be configured locally without printing them."
   },

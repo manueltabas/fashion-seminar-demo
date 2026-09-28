@@ -14,8 +14,9 @@
 
 ## GitHub setup — 2026-09-28
 
-- Initialized Git with `main` for this demo folder; target private repository: `manueltabas/fashion-seminar-demo`.
+- Initialized Git with `main` for this demo folder; private repository: https://github.com/manueltabas/fashion-seminar-demo.
 - Added README and setup instructions, including explicit commit/push and pull request workflows.
+- Initial source commit `b1d908c` pushed to `origin/main`; GitHub privacy and matching local/remote commit verified. Local branch tracks `origin/main` and working tree was clean.
 - Verified `.env`, dependencies, build output, and TypeScript cache are ignored. Scanned the 205 initial source/document files for common provider tokens and private keys; no matches.
 - No application behavior changed; prior runtime verification remains historical. No new database operations or model calls were performed.
 - Saved reports remain in the local PostgreSQL database. GitHub syncing requires commit and push; it is not automatic.
